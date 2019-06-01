@@ -12,7 +12,7 @@
         style: cytoscape.stylesheet()
             .selector('node')
             .style({
-                'content': 'data(id)'
+                'content': 'data(name)'
             })
             .selector('edge')
             .style({
@@ -37,8 +37,8 @@
 
         elements: {
             nodes: [
-                {data: {id: 'producer'}},
-                {data: {id: 'collector'}}
+                {data: {id: 'producer', name: 'producer'}},
+                {data: {id: 'collector', name: 'collector'}}
             ],
 
             edges: []
@@ -70,10 +70,16 @@
 
     });
 
-    function handleConsumer(id, payload) {
+
+    const producers = []
+    const consumers = []
+
+    function handleProducer(id, payload) {
         if (graph.$(`#p${id}`).length === 0) {
+            producers.push(id)
+
             graph.add([
-                {group: 'nodes', data: {id: `consumer${id}`}},
+                {group: 'nodes', data: {id: `consumer${id}`, name: `consumer${id}`}},
                 {group: 'edges', data: {id: `p${id}`, source: 'producer', target: `consumer${id}`}}
             ])
 
@@ -85,15 +91,21 @@
             }).run()
         }
 
-        graph.edges().removeClass("highlighted")
-        graph.nodes().removeClass("highlighted")
+        graph.$(`#collector`).data('name', 'collector: ' + payload)
+
+        for (i in producers) {
+            graph.$(`#p${i}`).removeClass("highlighted")
+            graph.$(`#consumer${i}`).removeClass("highlighted")
+        }
 
         graph.$(`#p${id}`).addClass("highlighted")
         graph.$(`#consumer${id}`).addClass("highlighted")
     }
 
-    function handleProducer(id, payload) {
+    function handleConsumer(id, payload) {
         if (graph.$(`#c${id}`).length === 0) {
+            consumers.push(id)
+
             graph.add([
                 {group: 'edges', data: {id: `c${id}`, source: `consumer${id}`, target: `collector`}}
             ])
@@ -106,8 +118,12 @@
             }).run()
         }
 
-        graph.edges().removeClass("highlighted")
-        graph.nodes().removeClass("highlighted")
+        for (i in consumers) {
+            graph.$(`#c${i}`).removeClass("highlighted")
+            graph.$(`#consumer${i}`).removeClass("highlighted")
+        }
+
+        graph.$("#producer").data('name', 'producer: ' + payload)
 
         graph.$(`#c${id}`).addClass("highlighted")
         graph.$(`#consumer${id}`).addClass("highlighted")

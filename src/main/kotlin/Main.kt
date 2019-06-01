@@ -14,6 +14,8 @@ import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicLong
+import kotlin.random.Random
 
 fun main(vararg args: String) {
 
@@ -55,14 +57,15 @@ object Server {
 }
 
 fun CoroutineScope.producer(): ReceiveChannel<String> = produce {
-    for (i in 1..10_000) {
-        for (c in 'a' .. 'z') {
-            send(c.toString()) // produce next
-        }
+    val limit = 1000
+    for (i in 1..limit) {
+        send((limit - i).toString()) // produce next
+        delay(refreshRate)
     }
 }
 
 
+val counter = AtomicLong(0)
 
 fun CoroutineScope.consumer(
     id: Int,
@@ -73,7 +76,8 @@ fun CoroutineScope.consumer(
     for (msg in channel) {
         messageBus.send("consumer:$id:$msg")
         println("Processor #$id received $msg")
-        collector.send(CollectorMessage(id, msg))
+        collector.send(CollectorMessage(id, counter.incrementAndGet().toString()))
+        delay(refreshRate * Random.nextInt(2, 5))
     }
 }
 
