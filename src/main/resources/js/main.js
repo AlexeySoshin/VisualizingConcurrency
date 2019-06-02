@@ -60,11 +60,14 @@
         let payload = message[2]
 
         switch (type) {
+            case "producer":
+                handleProducer(id, payload)
+                break;
             case "consumer":
                 handleConsumer(id, payload)
                 break;
             case "collector":
-                handleProducer(id, payload)
+                handleCollector(id, payload)
                 break;
         }
 
@@ -75,6 +78,10 @@
     const consumers = []
 
     function handleProducer(id, payload) {
+        graph.$("#producer").data('name', 'producer: ' + payload)
+    }
+
+    function handleConsumer(id, payload) {
         if (graph.$(`#p${id}`).length === 0) {
             producers.push(id)
 
@@ -91,8 +98,6 @@
             }).run()
         }
 
-        graph.$(`#collector`).data('name', 'collector: ' + payload)
-
         for (i in producers) {
             graph.$(`#p${i}`).removeClass("highlighted")
             graph.$(`#consumer${i}`).removeClass("highlighted")
@@ -102,7 +107,7 @@
         graph.$(`#consumer${id}`).addClass("highlighted")
     }
 
-    function handleConsumer(id, payload) {
+    function handleCollector(id, payload) {
         if (graph.$(`#c${id}`).length === 0) {
             consumers.push(id)
 
@@ -123,7 +128,7 @@
             graph.$(`#consumer${i}`).removeClass("highlighted")
         }
 
-        graph.$("#producer").data('name', 'producer: ' + payload)
+        graph.$(`#collector`).data('name', 'collector: ' + payload)
 
         graph.$(`#c${id}`).addClass("highlighted")
         graph.$(`#consumer${id}`).addClass("highlighted")

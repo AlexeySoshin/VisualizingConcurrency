@@ -23,7 +23,7 @@ fun main(vararg args: String) {
 
 }
 const val producers = 6
-const val refreshRate = 500L
+const val refreshRate = 100L
 object Server {
     fun start() {
 
@@ -39,14 +39,13 @@ object Server {
                 }
                 webSocket("/ws") {
                     println("Incoming connection")
-                    val producer = producer()
+                    val producer = producer(1, channel)
                     val collector = collector(channel)
                     val processors = List(producers) {
                         consumer(it, producer, channel, collector)
                     }
                     for (m in channel) {
                         send(Frame.Text(m))
-                        delay(refreshRate)
                     }
                 }
             }
@@ -56,9 +55,11 @@ object Server {
     }
 }
 
-fun CoroutineScope.producer(): ReceiveChannel<String> = produce {
+fun CoroutineScope.producer(id: Int,
+                            messageBus: Channel<String>): ReceiveChannel<String> = produce(capacity = UNLIMITED) {
     val limit = 1000
     for (i in 1..limit) {
+        messageBus.send("producer:$id:${limit - i}")
         send((limit - i).toString()) // produce next
         delay(refreshRate)
     }
@@ -77,7 +78,6 @@ fun CoroutineScope.consumer(
         messageBus.send("consumer:$id:$msg")
         println("Processor #$id received $msg")
         collector.send(CollectorMessage(id, counter.incrementAndGet().toString()))
-        delay(refreshRate * Random.nextInt(2, 5))
     }
 }
 
@@ -88,5 +88,6 @@ fun CoroutineScope.collector(messageBus: Channel<String>) = actor<CollectorMessa
         println("Got $msg")
 
         messageBus.send("collector:${msg.consumerId}:${msg.message}")
+        delay(refreshRate * Random.nextInt(5, 10))
     }
 }
