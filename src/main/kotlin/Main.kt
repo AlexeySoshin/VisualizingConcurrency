@@ -9,25 +9,25 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.websocket.WebSockets
 import io.ktor.websocket.webSocket
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import java.net.URL
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.coroutines.CoroutineContext
 import kotlin.random.Random
 
-fun main(vararg args: String) {
+fun main() {
 
     Server.start()
 
 }
-const val producers = 6
+const val producers = 8
 const val refreshRate = 100L
 object Server {
     fun start() {
 
-        val channel = Channel<String>(Channel.UNLIMITED)
+        val channel = Channel<String>(UNLIMITED)
 
         val server = embeddedServer(Netty, port = 8080) {
             install(WebSockets)
@@ -54,6 +54,67 @@ object Server {
         println("Open: http://localhost:8080")
     }
 }
+
+
+@ExperimentalCoroutinesApi
+class Scrapper : CoroutineScope {
+    override val coroutineContext = Dispatchers.Default
+
+    fun scrap(url: URL): ReceiveChannel<String> = produce {
+        val html = url.fetchAsHtml()
+        val links = parseLinks(html)
+
+        for (link in links) {
+            send(link)
+        }
+    }
+
+    private fun download(processors: Int, url: URL) {
+        val links = scrap(url)
+
+        List(processors) {
+            Downloader(links).start()
+        }
+    }
+
+    private fun parseLinks(html: String): List<String> {
+        saver()
+        return listOf()
+    }
+
+
+}
+
+class Downloader(private val links: ReceiveChannel<String>) : CoroutineScope {
+    override val coroutineContext = Dispatchers.Default
+
+    fun start() = launch {
+        for (link in links) {
+            val bytes: ByteArray = link.download()
+            //TODO do something with those bytes
+        }
+    }
+}
+
+private fun String.download(): ByteArray {
+    return "".toByteArray()
+}
+data class SaveFileMessage(val name: String, val content: ByteArray)
+fun CoroutineScope.saver() = actor<SaveFileMessage> {
+    for (msg in channel) {
+        saveToDisk(msg.name, msg.content)
+    }
+}
+
+fun saveToDisk(name: Any, content: Any) {
+    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+}
+
+
+private fun URL.fetchAsHtml(): String {
+    return this.toString() // does nothing interesting
+}
+
 
 fun CoroutineScope.producer(id: Int,
                             messageBus: Channel<String>): ReceiveChannel<String> = produce(capacity = UNLIMITED) {

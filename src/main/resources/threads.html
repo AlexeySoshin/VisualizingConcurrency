@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Webserver using a thread pool</title>
+    <style>
+        #container {
+            display: flex;
+            align-items: stretch;
+            height: 98vh;
+            font-family: "Arial Black";
+        }
+
+        #threadPoolContainer {
+            width:50%;
+        }
+
+        #threadPool {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: stretch;
+            height:100%;
+        }
+
+        #requestQueueContainer {
+            display: flex;
+            width:50%;
+            flex-wrap: wrap;
+            align-content: flex-start;
+        }
+
+        #requestQueue {
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            height:90vh;
+        }
+
+        #configuration {
+            width:100%;
+        }
+
+        .thread {
+            background-color:#001f3f;
+            color:white;
+            border:1px solid white;
+            width:24%;
+            height:50%;
+            flex-wrap: wrap;
+            display: flex;
+            align-content: flex-start;
+        }
+
+        .threadHeader {
+            width:100%;
+            text-align: center;
+        }
+
+        .request {
+            height:2vh;
+            border:1px solid white;
+            width:2vh;
+        }
+
+        .request.processing {
+            background-color:#2ECC40;
+        }
+
+        .request.completed {
+            background-color:black;
+        }
+
+        .request.old {
+            background-color:#FFDC00;
+        }
+
+        .request.older {
+            background-color:#FF851B;
+        }
+
+        .request.oldest {
+            background-color: #FF4136;
+        }
+
+        .containerHeader {
+            width:100%;
+            text-align:center;
+            font-size:4vh;
+            display:flex;
+            align-self: flex-end;
+        }
+    </style>
+</head>
+<body>
+    <div id = "container">
+        <div id = "threadPoolContainer">
+            <div class = "containerHeader">Thread Pool</div>
+            <div id = "threadPool"></div>
+        </div>
+        <div id = "requestQueueContainer">
+            <div class = "containerHeader">Request queue</div>
+            <div id = "configuration">
+                <label>Requests per Second: <input id = "requestPerSecondInput" type = "number" value="16" max="100" min="1"></label>
+                <label>Threads: <input id = "threadsInput" type = "number" value="8" max="8" min="1"></label>
+            </div>
+            <div id = "requestQueue"></div>
+
+        </div>
+
+    </div>
+<script>
+    let threads = 8;
+    let requestsPerSecond = 16;
+    let processingTimeSeconds = 1;
+
+    function addThread(index) {
+        let thread = document.createElement("div");
+        thread.className = "thread";
+        thread.innerHTML = `<div class = 'threadHeader'>Thread-${index}</div>`;
+        threadPool.appendChild(thread);
+    }
+
+    let threadPool = document.getElementById("threadPool");
+    let requestQueue = document.getElementById("requestQueue");
+    for (let i = 0; i < threads; i++) {
+        addThread(i)
+    }
+
+    let requestInterval = setInterval(spawnRequest(), 1000 / requestsPerSecond);
+
+    document.getElementById("requestPerSecondInput").addEventListener("change", () => {
+        clearInterval(requestInterval);
+        let requestsPerSecond = parseInt(document.getElementById("requestPerSecondInput").value) || 1;
+        requestInterval = setInterval(spawnRequest(), 1000 / requestsPerSecond);
+    });
+
+    document.getElementById("threadsInput").addEventListener("change", () => {
+        let desiredThreads = parseInt(document.getElementById("threadsInput").value);
+        let currentThreads = threadPool.childElementCount;
+        if (currentThreads > desiredThreads) {
+            for (let i = currentThreads; i > desiredThreads; i--) {
+                threadPool.lastChild.remove()
+            }
+        }
+        else if (currentThreads < desiredThreads) {
+            for (let i = currentThreads; i < desiredThreads; i++) {
+                addThread(i)
+            }
+        }
+    });
+
+    let processingInterval = setInterval(processRequest, 10);
+
+    let agingInterval = setInterval(ageRequests(), 100);
+
+    function spawnRequest() {
+        let requestCount = 0;
+
+        return function() {
+            let request = document.createElement("div");
+            request.className = "request processing";
+            request.id = "request" + requestCount;
+            request.innerHTML = "🙂";
+            requestQueue.appendChild(request);
+
+            if (requestQueue.childElementCount > 1000) {
+                clearInterval(requestInterval);
+            }
+            requestCount++;
+        }
+    }
+
+    function processRequest() {
+        for (let i = 0; i < threadPool.childElementCount; i++) {
+            let thread = threadPool.children[i];
+            if (isFree(thread)) {
+                if (requestQueue.firstChild) {
+                    let request = requestQueue.firstChild.cloneNode();
+                    assign(thread, request);
+                    requestQueue.firstChild.remove();
+                }
+                break;
+            }
+        }
+
+        function isFree(thread) {
+            return thread.getElementsByClassName("processing").length === 0;
+        }
+
+        function assign(thread, request) {
+            thread.appendChild(request);
+            setTimeout(function() {
+                request.className = "request completed";
+
+                setTimeout(function() {
+                    request.remove()
+                }, processingTimeSeconds * 1000 * 60);
+            }, processingTimeSeconds * 1000);
+        }
+    }
+
+    function ageRequests() {
+        let ages = new Map();
+        const steps = {20: {class: "older", icon: ""},
+            10: {class: "old", icon: ""},
+            40: {class: "oldest", icon: "😡"}};
+
+        return function age() {
+            for (let i = 0; i < requestQueue.childElementCount; i++) {
+                let request = requestQueue.children[i];
+                if (!ages[request.id]) {
+                    ages[request.id] = 0;
+                }
+                ages[request.id] = ages[request.id] + 1;
+
+                for (let s in steps) {
+                    if (ages[request.id] > s) {
+                        request.className += " " + steps[s].class;
+                        request.innerHTML = steps[s].icon;
+                    }
+                }
+            }
+        }
+    }
+</script>
+</body>
+</html>

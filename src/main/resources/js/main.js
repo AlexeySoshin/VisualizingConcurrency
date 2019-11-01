@@ -1,9 +1,9 @@
 (function () {
-    var url = "ws://localhost:8080/ws";
-    var client = new WebSocket(url)
+    const url = "ws://localhost:8080/ws";
+    const client = new WebSocket(url)
 
 
-    var graph = cytoscape({
+    const graph = cytoscape({
         container: document.getElementById('main'),
 
         boxSelectionEnabled: false,
@@ -123,7 +123,7 @@
             }).run()
         }
 
-        for (i in consumers) {
+        for (let i in consumers) {
             graph.$(`#c${i}`).removeClass("highlighted")
             graph.$(`#consumer${i}`).removeClass("highlighted")
         }
