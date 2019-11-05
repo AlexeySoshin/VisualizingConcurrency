@@ -1,9 +1,7 @@
 
 import io.ktor.application.install
 import io.ktor.http.cio.websocket.Frame
-import io.ktor.http.content.defaultResource
-import io.ktor.http.content.resource
-import io.ktor.http.content.static
+import io.ktor.http.content.*
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -14,7 +12,6 @@ import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import java.net.URL
 import java.util.concurrent.atomic.AtomicLong
-import kotlin.coroutines.CoroutineContext
 import kotlin.random.Random
 
 fun main() {
@@ -35,6 +32,7 @@ object Server {
                 static("/") {
                     resource("js/main.js")
                     resource("css/main.css")
+                    resources("images")
                     defaultResource("index.html")
                 }
                 webSocket("/ws") {
