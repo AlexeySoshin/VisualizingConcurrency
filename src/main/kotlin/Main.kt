@@ -32,6 +32,8 @@ object Server {
                 static("/") {
                     resource("js/main.js")
                     resource("css/main.css")
+                    resource("threads.html")
+                    resource("multireactor.html")
                     resources("images")
                     defaultResource("index.html")
                 }

@@ -160,7 +160,7 @@
             let request = document.createElement("div");
             request.className = "request processing";
             request.id = "request" + requestCount;
-            request.innerHTML = "🙂";
+           // request.innerHTML = "🙂";
             requestQueue.appendChild(request);
 
             if (requestQueue.childElementCount > 1000) {
@@ -201,9 +201,12 @@
 
     function ageRequests() {
         let ages = new Map();
-        const steps = {20: {class: "older", icon: ""},
-            10: {class: "old", icon: ""},
-            40: {class: "oldest", icon: "😡"}};
+        const steps = {
+            20: {class: "old", icon: ""},
+            40: {class: "older", icon: ""},
+           // 60: {class: "oldest", icon: "😡"}
+            60: {class: "oldest", icon: ""}
+        };
 
         return function age() {
             for (let i = 0; i < requestQueue.childElementCount; i++) {
