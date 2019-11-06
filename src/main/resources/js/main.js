@@ -67,6 +67,17 @@
         }
     });
 
+    graph.$("#collector").qtip({
+        content: function(){ return `<img src = '/save.jpg' />`},
+        position: {
+            my: 'top center',
+            at: 'bottom center'
+        },
+        show: {
+            solo: true
+        }
+    });
+
     client.addEventListener('message', (event) => {
 
         let message = event.data.split(":")
@@ -103,7 +114,9 @@
 
             graph.add([
                 {group: 'nodes', data: {id: `consumer${id}`, name: `ImageFetcher ${(parseInt(id)+1)}`}},
-                {group: 'edges', data: {id: `p${id}`, source: 'producer', target: `consumer${id}`}}
+                {group: 'edges', data: {id: `p${id}`,
+                        source: 'producer',
+                        target: `consumer${id}`}}
             ])
 
             graph.layout({
@@ -114,7 +127,7 @@
             }).run()
 
             graph.$(`#consumer${id}`).qtip({
-                    content: function(){ return `<img src = '/scrap.jpg' />`},
+                    content: function(){ return `<img src = '/downloader.jpg' />`},
                     position: {
                         my: 'top center',
                         at: 'bottom center'
@@ -127,11 +140,11 @@
 
         for (i in producers) {
             graph.$(`#p${i}`).removeClass("highlighted")
-            graph.$(`#consumer${i}`).removeClass("highlighted")
+        //    graph.$(`#consumer${i}`).removeClass("highlighted")
         }
 
         graph.$(`#p${id}`).addClass("highlighted")
-        graph.$(`#consumer${id}`).addClass("highlighted")
+     //   graph.$(`#consumer${id}`).addClass("highlighted")
     }
 
     function handleCollector(id, payload) {
