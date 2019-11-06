@@ -16,11 +16,15 @@
             })
             .selector('edge')
             .style({
-                'curve-style': 'bezier',
+                'curve-style': (window.location.search.endsWith("join")) ? 'taxi' : 'bezier',
+                "taxi-direction": "downward",
+                "taxi-turn": 20,
+                "taxi-turn-min-distance": 10,
                 'target-arrow-shape': 'triangle',
                 'width': 4,
                 'line-color': '#001f3f',
-                'target-arrow-color': '#001f3f'
+                'target-arrow-color': '#001f3f',
+                'z-index': 1
             })
             .selector('.highlighted')
             .style({
@@ -28,7 +32,8 @@
                 'line-color': '#2ECC40',
                 'target-arrow-color': '#2ECC40',
                 'transition-property': 'background-color, line-color, target-arrow-color',
-                'transition-duration': '0.1s'
+                'transition-duration': '0.1s',
+                'z-index': 100
             })
             .selector('#producer')
             .style({
