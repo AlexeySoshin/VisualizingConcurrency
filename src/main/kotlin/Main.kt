@@ -149,6 +149,6 @@ fun CoroutineScope.collector(messageBus: Channel<String>) = actor<CollectorMessa
         println("Got $msg")
 
         messageBus.send("collector:${msg.consumerId}:${msg.message}")
-        delay(refreshRate * Random.nextInt(5, 10))
+        delay(refreshRate * Random.nextInt(15, 20))
     }
 }
